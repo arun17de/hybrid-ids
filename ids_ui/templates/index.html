@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network IDS Control Panel </title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        button { padding: 10px 20px; margin: 10px; }
+        #predictions { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Network IDS Control Panel</h2>
+
+    <button onclick="start()">Start Scan</button>
+    <button onclick="stop()">Stop Scan</button>
+    <div id="status"></div>
+    <h3>Scan Status: <span id="scan-status">Unknown</span></h3>
+
+  <p><strong>Alerts (Zeek):</strong> <span id="alertCount">0</span></p>
+  <p><strong>Attacks (ML):</strong> <span id="attackCount">0</span></p>
+
+    <h3>Recent Predictions 📈</h3>
+    <div id="predictions">Loading...</div>
+    
+    <button onclick="startScripts()">Start Scripts</button>
+    <button onclick="stopScripts()">Stop Scripts</button>
+
+    <h3>Alerts 🚨</h3>
+    <div id="alerts">No alerts yet.</div>
+
+    
+
+<script>
+    function start() {
+        fetch('/start').then(res => res.json()).then(data => {
+            document.getElementById('status').innerText = 'Started services.';
+            document.getElementById('scan-status').innerText = 'Running 🟢';
+        });
+    }
+
+    function stop() {
+        fetch('/stop').then(res => res.json()).then(data => {
+            document.getElementById('status').innerText = 'Stopped services.';
+            document.getElementById('scan-status').innerText = 'Stopped ⛔';
+        });
+    }
+
+    function loadPredictions() {
+        fetch('/predictions').then(res => res.json()).then(data => {
+            document.getElementById('predictions').innerText = data.predictions.join('');
+        });
+    }
+
+    function checkStatus() {
+        fetch('/status').then(res => res.json()).then(data => {
+            document.getElementById('scan-status').innerText = data.status;
+        });
+    }
+    
+ function startScripts() {
+    fetch('/start-scripts').then(res => res.json()).then(data => {
+        document.getElementById('status').innerText = 'Port scan script started.';
+    });
+}
+
+function stopScripts() {
+    fetch('/stop-scripts').then(res => res.json()).then(data => {
+        document.getElementById('status').innerText = 'Port scan script stopped.';
+    });
+}
+
+function loadAlerts() {
+    fetch('/alerts').then(res => res.json()).then(data => {
+        if (data.alerts.length === 0) {
+            document.getElementById('alerts').innerText = 'No alerts.';
+        } else {
+            document.getElementById('alerts').innerHTML = data.alerts.map(a => `<div>${a}</div>`).join('');
+        }
+    });
+}
+
+function fetchCount() {
+        fetch('/count')  // Changed from '/counts' to '/count'
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('alertCount').textContent = data.alert_count;  // Fixed mismatch in IDs
+                document.getElementById('attackCount').textContent = data.attack_count;  // Fixed mismatch in IDs
+            });
+    }
+
+
+
+    setInterval(() => {
+        loadPredictions();
+        checkStatus();
+        loadAlerts();
+        fetchCount();
+    }, 3000);  // Refresh every 3s
+
+
+    loadPredictions();  // Initial load
+    checkStatus();      // Initial status
+    loadAlerts();
+    fetchCount();
+</script>
+
+</body>
+</html>
+
